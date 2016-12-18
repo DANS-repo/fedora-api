@@ -1,0 +1,11 @@
+--index-url https://pypi.python.org/simple/
+
+### requirements.txt ##############################################
+###
+### To install, run:
+###      $ pip install -r requirements.txt
+###
+###################################################################
+
+requests
+-e .
