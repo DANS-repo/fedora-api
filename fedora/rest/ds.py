@@ -10,7 +10,7 @@ ns = {"dsp" : "http://www.fedora.info/definitions/1/0/management/"}
 class DatastreamProfile(object):
 
     def __init__(self, object_id, ds_id):
-        self.fedora = api.FEDORA
+        self.fedora = api.get_fedora()
         self.object_id = object_id
         self.ds_id = ds_id
 

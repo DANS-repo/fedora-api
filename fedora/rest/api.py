@@ -9,6 +9,13 @@ LOG = logging.getLogger(__name__)
 FEDORA = None
 
 
+def get_fedora():
+    if FEDORA:
+        return FEDORA
+    else:
+        raise FedoraException("Fedora has not been initialized.")
+
+
 class FedoraException(RuntimeError):
     pass
 
