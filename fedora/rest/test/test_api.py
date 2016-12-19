@@ -17,14 +17,6 @@ class TestFedora(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cfg_file = os.path.join(os.path.expanduser("~"), "src", connection_parameter_file)
-        with open(cfg_file) as cfg:
-            line = cfg.readline()
-        host, port, username, password = line.split(",")
-        if not host.startswith("http"):
-            host = "http://" + host
-        cls.fedora = Fedora(host, port, username, password)
-
         # set up logging
         root = logging.getLogger()
         root.setLevel(logging.DEBUG)
@@ -33,6 +25,19 @@ class TestFedora(unittest.TestCase):
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         ch.setFormatter(formatter)
         root.addHandler(ch)
+
+        cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
+        cls.fedora = Fedora(cfg_file=cfg_file)
+
+    @unittest.skip
+    def test_reset(self):
+        old = str(self.fedora)
+        Fedora.reset()
+        cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
+        self.fedora = Fedora(cfg_file=cfg_file)
+        new = str(self.fedora)
+        self.assertNotEqual(old, new)
+        self.assertEqual(self.fedora, Fedora())
 
     def test_object_xml(self):
         objectxml = self.fedora.object_xml(test_file)
@@ -56,7 +61,7 @@ class TestFedora(unittest.TestCase):
 
     def test_datastream_easy_file(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE", content_format="xml")
-        print(datastream)
+        #print(datastream)
         self.assertTrue(datastream.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     def test_add_relationship(self):

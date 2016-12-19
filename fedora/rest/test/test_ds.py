@@ -18,14 +18,6 @@ class TestDatastreamProfile(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cfg_file = os.path.join(os.path.expanduser("~"), "src", connection_parameter_file)
-        with open(cfg_file) as cfg:
-            line = cfg.readline()
-        host, port, username, password = line.split(",")
-        if not host.startswith("http"):
-            host = "http://" + host
-        Fedora(host, port, username, password)
-
         # set up logging
         root = logging.getLogger()
         root.setLevel(logging.DEBUG)
@@ -38,4 +30,6 @@ class TestDatastreamProfile(unittest.TestCase):
     def test_fetch(self):
         dsp = DatastreamProfile(test_file, "EASY_FILE")
         dsp.fetch()
-        print(dsp.__dict__)
+        #print(dsp.props)
+        self.assertEqual(15, len(dsp.props))
+        self.assertIsNotNone(dsp.ds_size)

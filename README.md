@@ -1,2 +1,3 @@
-# fedora-sl
+# fedora-api
+
 scripting fedora commons

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import xml.etree.ElementTree as ET
 
-from fedora.rest import api
+from fedora.rest.api import Fedora
 
 ns = {"dsp" : "http://www.fedora.info/definitions/1/0/management/"}
 
@@ -10,7 +10,7 @@ ns = {"dsp" : "http://www.fedora.info/definitions/1/0/management/"}
 class DatastreamProfile(object):
 
     def __init__(self, object_id, ds_id):
-        self.fedora = api.get_fedora()
+        self.fedora = Fedora()
         self.object_id = object_id
         self.ds_id = ds_id
 
@@ -28,6 +28,7 @@ class DatastreamProfile(object):
         self.ds_location_type = None
         self.ds_checksum_type = None
         self.ds_checksum = None
+        self.props = {}
 
     def fetch(self):
         xml = self.fedora.datastream(self.object_id, self.ds_id, content_format="xml")
@@ -46,6 +47,7 @@ class DatastreamProfile(object):
         self.ds_location_type = self.__text__(root.find("dsp:dsLocationType", ns))
         self.ds_checksum_type = self.__text__(root.find("dsp:dsChecksumType", ns))
         self.ds_checksum = self.__text__(root.find("dsp:dsChecksum", ns))
+        self.props = {k : v for k, v in self.__dict__.items() if k.startswith("ds_")}
 
     @staticmethod
     def __text__(element):
