@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
+import re
 import urllib.parse
 
 import requests
@@ -127,9 +128,36 @@ class Fedora(object):
                 query.update({"datatype": data_type})
         return urllib.parse.urlencode(query)
 
+    def download(self, object_id, ds_id, folder="downloads", id_in_path=True, chunk_size=1024):
+        if id_in_path:
+            path = os.path.abspath(os.path.join(folder, object_id.split(":")[1]))
+        else:
+            path = os.path.abspath(folder)
+        os.makedirs(path, exist_ok=True)
+        url = self.url + "/objects/" + object_id + "/datastreams/" + ds_id + "/content"
+        response = self.session.get(url, stream=True)
+        if response.status_code == requests.codes.ok:
+            filename = "unknown"
+            # # Fedora response header has filenames with double extensions like "filename.pdf.pdf"
+            # # therefore this code is problematic
+            cd = response.headers['content-disposition']
+            fn = re.findall("filename=(.+)", cd)
+            if len(fn) > 0:
+                filename = fn[0]
+                if filename.startswith("\""):
+                    filename = filename[1:]
+                if filename.endswith("\""):
+                    filename = filename[:-1]
+            # # correct double extension
+            exts = filename.split(".")
+            leng = len(exts)
+            if leng > 2 and exts[leng -1] == exts[leng - 2]:
+                filename = ".".join(exts[:-1])
 
-
-
-
-
-
+            file_path = os.path.join(path, filename)
+            with open(file_path, 'wb') as fd:
+                for chunk in response.iter_content(chunk_size):
+                    fd.write(chunk)
+            LOG.debug("Downloaded %s" % file_path)
+        else:
+            raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))

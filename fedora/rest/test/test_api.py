@@ -87,3 +87,10 @@ class TestFedora(unittest.TestCase):
                                        "http://dans.knaw.nl/ontologies/conversions#conversionDate",
                                        "2016-11-23T00:00:00.000Z", is_literal=True,
                                        data_type="http://www.w3.org/2001/XMLSchema#dateTime")
+
+    def test_download(self):
+        folder = os.path.join(os.path.expanduser("~"), "tmp", "fedora_download")
+        self.fedora.download(test_file, "EASY_FILE", folder=folder)
+        self.fedora.download(test_file, "RELS-EXT", folder=folder)
+        self.fedora.download(test_file, "DC", folder=folder)
+        self.fedora.download(test_file, "EASY_FILE_METADATA", folder=folder)
