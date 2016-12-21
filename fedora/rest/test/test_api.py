@@ -90,7 +90,8 @@ class TestFedora(unittest.TestCase):
 
     def test_download(self):
         folder = os.path.join(os.path.expanduser("~"), "tmp", "fedora_download")
-        self.fedora.download(test_file, "EASY_FILE", folder=folder)
+        meta = self.fedora.download(test_file, "EASY_FILE", folder=folder)
+        print(meta)
         self.fedora.download(test_file, "RELS-EXT", folder=folder)
         self.fedora.download(test_file, "DC", folder=folder)
         self.fedora.download(test_file, "EASY_FILE_METADATA", folder=folder)

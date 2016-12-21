@@ -9,5 +9,5 @@ setup(
     author='hvdb',
     author_email='',
     description='scripting fedora commons',
-    install_requires=['requests']
+    install_requires=['requests', 'python-dateutil']
 )

@@ -154,10 +154,13 @@ class Fedora(object):
             if leng > 2 and exts[leng -1] == exts[leng - 2]:
                 filename = ".".join(exts[:-1])
 
-            file_path = os.path.join(path, filename)
-            with open(file_path, 'wb') as fd:
+            local_path = os.path.join(path, filename)
+            with open(local_path, 'wb') as fd:
                 for chunk in response.iter_content(chunk_size):
                     fd.write(chunk)
-            LOG.debug("Downloaded %s" % file_path)
+            LOG.debug("Downloaded %s" % local_path)
+            meta = {"filename": filename, "local-path": local_path}
+            meta.update(response.headers)
+            return meta
         else:
             raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
