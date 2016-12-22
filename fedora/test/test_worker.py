@@ -52,7 +52,7 @@ class TestWorker(unittest.TestCase):
         log_file = os.path.join(dump_dir, "worker-log9.csv")
 
         worker = Worker()
-        checksum_error_count = worker.verify_checksums(log_file)
+        checksum_error_count = worker.verify_checksums_local(log_file)
         self.assertEqual(0, checksum_error_count)
 
 
