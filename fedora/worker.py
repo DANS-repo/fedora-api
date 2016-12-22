@@ -2,10 +2,15 @@
 # -*- coding: utf-8 -*-
 import csv
 import os
+import re
+
+import logging
 
 from fedora import utils
 from fedora.rest.api import Fedora
 from fedora.rest.ds import DatastreamProfile, FileItemMetadata
+
+LOG = logging.getLogger(__name__)
 
 
 class Worker(object):
@@ -82,6 +87,47 @@ class Worker(object):
                                      profile.ds_checksum_type, profile.ds_checksum, profile.ds_creation_date,
                                      fmd.fmd_creator_role, fmd.fmd_visible_to, fmd.fmd_accessible_to,
                                      checksum_error])
+        return checksum_error_count
+
+    def verify_checksums(self, log_file, has_header=True, col_local_path=5, col_checksum=9):
+        """
+        Verify sha1 checksums over a bunch of files listed in `log_file`. This method creates a new `log_file{x}`,
+        alongside the old one, where `x` is an ordinal number. The new `log_file{x}` will be a copy of the
+        `log_file` with an additional column in which checksum errors will be reported.
+
+        :param log_file: name of the file containing local_path and previously calculated sha1 in columns
+        :param has_header: does the `log_file` have column headings, default: True
+        :param col_local_path: the column number (zero-based) that contains the local path to each inspected file
+        :param col_checksum: the column number (zero-based) that contains the previously computed sha1
+        :return: count of checksum errors
+        """
+        abs_log_file = os.path.abspath(log_file)
+        parts = os.path.splitext(os.path.basename(abs_log_file))
+        digits = re.findall("\d+", parts[0])
+        ordinal = (int(digits[0]) if len(digits) > 0 else 0) + 1
+        base_name = ''.join(i for i in parts[0] if not i.isdigit())
+        new_log_file = os.path.join(os.path.dirname(abs_log_file), base_name + str(ordinal) + parts[1])
+
+        checksum_error_count = 0
+        with open(abs_log_file, "r", newline='') as old_log, open(new_log_file, "w", newline='') as new_log:
+            reader = csv.reader(old_log, dialect=self.dialect)
+            writer = csv.writer(new_log, dialect=self.dialect)
+            if has_header:
+                headers = next(reader, None)
+                if headers:
+                    headers.append("checksum_error_" + str(ordinal))
+                    writer.writerow(headers)
+            for row in reader:
+                LOG.debug("Verify sha1 checksum: %s" % row[col_local_path])
+                sha1 = utils.sha1_for_file(row[col_local_path])
+                if sha1 != row[col_checksum]:
+                    checksum_error = sha1
+                    checksum_error_count += 1
+                    LOG.warning("Found compromised sha1: %s" % row[col_local_path])
+                else:
+                    checksum_error = ""
+                row.append(checksum_error)
+                writer.writerow(row)
         return checksum_error_count
 
     @staticmethod

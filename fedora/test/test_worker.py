@@ -46,3 +46,13 @@ class TestWorker(unittest.TestCase):
         worker = Worker()
         checksum_error_count = worker.download_batch(id_list, dump_dir, log_file)
         self.assertEqual(0, checksum_error_count)
+
+    def test_verify_checksums(self):
+        dump_dir = os.path.join(os.path.expanduser("~"), "tmp", "worker-downloads")
+        log_file = os.path.join(dump_dir, "worker-log9.csv")
+
+        worker = Worker()
+        checksum_error_count = worker.verify_checksums(log_file)
+        self.assertEqual(0, checksum_error_count)
+
+
