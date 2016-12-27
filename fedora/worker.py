@@ -104,7 +104,24 @@ class Worker(object):
                                      checksum_error])
         return checksum_error_count
 
-    def verify_checksums_local(self, log_file, has_header=True, col_local_path=5, col_checksum=9):
+    @staticmethod
+    def id_iter(id_list):
+        if isinstance(id_list, str):
+            with open(id_list, "r") as id_file:
+                for line in id_file:
+                    yield line.rstrip()
+        elif isinstance(id_list, list):
+            for id in id_list:
+                yield id
+
+
+class LocalWorker(object):
+
+    def __init__(self, dialect=csv.excel):
+        self.dialect = dialect
+
+    def verify_checksums_local(self, log_file, has_header=True, col_local_path=5, col_checksum=9,
+                               col_checksum_error=14):
         """
         Verify sha1 checksums over a bunch of files listed in `log_file`. The inspected files are on the local sysyem.
         This method creates a new `log_file{x}`, alongside the old one, where `x` is an ordinal number.
@@ -115,6 +132,7 @@ class Worker(object):
         :param has_header: does the `log_file` have column headings, default: True
         :param col_local_path: the column number (zero-based) that contains the local path to each inspected file
         :param col_checksum: the column number (zero-based) that contains the previously computed sha1
+        :param col_checksum_error: the column number (zero-based) that contains aberrant checksums
         :return: count of checksum errors
         """
         abs_log_file = os.path.abspath(log_file)
@@ -131,27 +149,24 @@ class Worker(object):
             if has_header:
                 headers = next(reader, None)
                 if headers:
-                    headers.append("checksum_error_" + str(ordinal))
                     writer.writerow(headers)
             for row in reader:
                 LOG.debug("Verify sha1 checksum: %s" % row[col_local_path])
-                sha1 = utils.sha1_for_file(row[col_local_path])
-                if sha1 != row[col_checksum]:
-                    checksum_error = sha1
+                if row[col_checksum_error] != "":
+                    checksum_error = "compromised checksum from previous check: " + row[col_checksum_error]
                     checksum_error_count += 1
-                    LOG.warning("Found compromised sha1: %s" % row[col_local_path])
+                    LOG.warning("Compromised checksum from previous check: %s" % row[col_local_path])
                 else:
-                    checksum_error = ""
-                row.append(checksum_error)
+                    sha1 = utils.sha1_for_file(row[col_local_path])
+                    if sha1 != row[col_checksum]:
+                        checksum_error = sha1
+                        checksum_error_count += 1
+                        LOG.warning("Found compromised sha1: %s" % row[col_local_path])
+                    else:
+                        checksum_error = ""
+                row[col_checksum_error] = checksum_error
                 writer.writerow(row)
-        return checksum_error_count
 
-    @staticmethod
-    def id_iter(id_list):
-        if isinstance(id_list, str):
-            with open(id_list, "r") as id_file:
-                for line in id_file:
-                    yield line.rstrip()
-        elif isinstance(id_list, list):
-            for id in id_list:
-                yield id
+        os.remove(abs_log_file)
+        os.rename(new_log_file, abs_log_file)
+        return checksum_error_count

@@ -8,7 +8,7 @@ import logging
 import sys
 
 from fedora.rest.api import Fedora
-from fedora.worker import Worker
+from fedora.worker import Worker, LocalWorker
 
 
 class TestWorker(unittest.TestCase):
@@ -37,7 +37,8 @@ class TestWorker(unittest.TestCase):
 
         ids = ["one", "two", "three"]
         rids = []
-        id_list = "resources/id-list.txt"
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        id_list = os.path.join(dir_path, "resources/id-list.txt")
         for id in worker.id_iter(id_list):
             rids.append(id)
         self.assertEqual(rids, ids)
@@ -51,11 +52,24 @@ class TestWorker(unittest.TestCase):
         checksum_error_count = worker.download_batch(id_list, dump_dir, log_file)
         self.assertEqual(0, checksum_error_count)
 
+
+class TestLocalWorker(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # set up logging
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
+
     def test_verify_checksums(self):
         dump_dir = os.path.join(os.path.expanduser("~"), "tmp", "worker-downloads")
-        log_file = os.path.join(dump_dir, "worker-log9.csv")
+        log_file = os.path.join(dump_dir, "worker-log.csv")
 
-        worker = Worker()
+        worker = LocalWorker()
         checksum_error_count = worker.verify_checksums_local(log_file)
         self.assertEqual(0, checksum_error_count)
 
