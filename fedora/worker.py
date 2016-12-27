@@ -7,7 +7,7 @@ import re
 import logging
 
 from fedora import utils
-from fedora.rest.api import Fedora
+from fedora.rest.api import Fedora, FedoraException
 from fedora.rest.ds import DatastreamProfile, FileItemMetadata
 
 LOG = logging.getLogger(__name__)
@@ -57,35 +57,50 @@ class Worker(object):
         os.makedirs(os.path.dirname(work_log), exist_ok=True)
         with open(work_log, 'w', newline='') as csv_log:
             csv_writer = csv.writer(csv_log, dialect=self.dialect)
-            csv_writer.writerow(["object_id", "ds_id", "server_date", "filename", "path", "local_path",
+            csv_writer.writerow(["file_id", "dataset_id", "server_date", "filename", "path", "local_path",
                                  "media_type", "size",
                                  "checksum_type", "checksum", "creation_date",
                                  "creator_role", "visible_to", "accessible_to",
                                  "checksum_error"])
 
             for object_id in self.id_iter(id_list):
-                meta = self.fedora.download(object_id, ds_id, dump_dir, id_in_path, chunk_size)
-                profile = DatastreamProfile(object_id, ds_id)
-                profile.fetch()
-                fmd = FileItemMetadata(object_id)
-                fmd.fetch()
-                server_date = utils.as_w3c_datetime(meta["Date"])
-                filename = meta["filename"]
-                local_path = meta["local-path"]
-                media_type = meta["Content-Type"]
-                size = int(meta["Content-Length"])
+                dataset_id = server_date = filename = file_path = local_path = media_type = size = checksum_type\
+                    = checksum = creation_date = creator_role = visible_to = accessible_to = checksum_error = "ERROR"
+                try:
+                    meta = self.fedora.download(object_id, ds_id, dump_dir, id_in_path, chunk_size)
+                    profile = DatastreamProfile(object_id, ds_id)
+                    profile.fetch()
+                    fmd = FileItemMetadata(object_id)
+                    fmd.fetch()
 
-                sha1 = utils.sha1_for_file(local_path)
-                if sha1 != profile.ds_checksum:
-                    checksum_error = sha1
+                    dataset_id = fmd.fmd_dataset_sid
+                    server_date = utils.as_w3c_datetime(meta["Date"])
+                    filename = meta["filename"]
+                    file_path = fmd.fmd_path
+                    local_path = meta["local-path"]
+                    media_type = meta["Content-Type"]
+                    size = int(meta["Content-Length"])
+                    checksum_type = profile.ds_checksum_type
+                    checksum = profile.ds_checksum
+                    creation_date = profile.ds_creation_date
+                    creator_role = fmd.fmd_creator_role
+                    visible_to = fmd.fmd_visible_to
+                    accessible_to = fmd.fmd_accessible_to
+
+                    sha1 = utils.sha1_for_file(local_path)
+                    if sha1 != profile.ds_checksum:
+                        checksum_error = sha1
+                        checksum_error_count += 1
+                    else:
+                        checksum_error = ""
+                except FedoraException:
                     checksum_error_count += 1
-                else:
-                    checksum_error = ""
+                    LOG.exception("Failed to download %s" % object_id)
 
-                csv_writer.writerow([object_id, ds_id, server_date, filename, fmd.fmd_path, local_path,
+                csv_writer.writerow([object_id, dataset_id, server_date, filename, file_path, local_path,
                                      media_type, size,
-                                     profile.ds_checksum_type, profile.ds_checksum, profile.ds_creation_date,
-                                     fmd.fmd_creator_role, fmd.fmd_visible_to, fmd.fmd_accessible_to,
+                                     checksum_type, checksum, creation_date,
+                                     creator_role, visible_to, accessible_to,
                                      checksum_error])
         return checksum_error_count
 

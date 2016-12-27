@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import logging
+import os
 import sys
 import unittest
 
+from fedora.rest.api import Fedora
 from fedora.rest.ds import DatastreamProfile, FileItemMetadata
 
 connection_parameter_file = "teasy.csv"
@@ -22,6 +24,9 @@ class TestDatastreamProfile(unittest.TestCase):
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         ch.setFormatter(formatter)
         root.addHandler(ch)
+
+        # set up connection to teasy
+        Fedora(cfg_file=os.path.expanduser("~/src/teasy.cfg"))
 
     def test_fetch_easy_file_profile(self):
         dsp = DatastreamProfile(test_file, "EASY_FILE")

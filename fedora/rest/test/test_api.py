@@ -65,6 +65,8 @@ class TestFedora(unittest.TestCase):
         self.assertTrue(datastream.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     def test_add_relationship(self):
+        # the datatype dateTime should not be set, because of exception in
+        # nl.knaw.dans.common.fedora.rdf.FedoraRelationsConverter.rdfToRelations
         self.fedora.add_relationship(test_file,
                                      "http://dans.knaw.nl/ontologies/conversions#isConversionOf",
                                      "info:fedora/easy-file:2")
@@ -73,8 +75,8 @@ class TestFedora(unittest.TestCase):
                                      "http://example-archive.org/aips/55e73f76-5b10-11e6-9822-685b357e70b6.5")
         self.fedora.add_relationship(test_file,
                                      "http://dans.knaw.nl/ontologies/conversions#conversionDate",
-                                     "2016-11-23T00:00:00.000Z", is_literal=True,
-                                     data_type="http://www.w3.org/2001/XMLSchema#dateTime")
+                                     "2016-11-23T00:00:00Z", is_literal=True) #,
+                                     #data_type="http://www.w3.org/2001/XMLSchema#dateTime")
 
     def test_purge_relationship(self):
         self.fedora.purge_relationship(test_file,
@@ -85,13 +87,28 @@ class TestFedora(unittest.TestCase):
                                        "http://example-archive.org/aips/55e73f76-5b10-11e6-9822-685b357e70b6.5")
         self.fedora.purge_relationship(test_file,
                                        "http://dans.knaw.nl/ontologies/conversions#conversionDate",
-                                       "2016-11-23T00:00:00.000Z", is_literal=True,
-                                       data_type="http://www.w3.org/2001/XMLSchema#dateTime")
+                                       "2016-11-23T00:00:00Z", is_literal=True) #,
+                                       #data_type="http://www.w3.org/2001/XMLSchema#dateTime")
+
+    # # Adding blind nodes to RELS-EXT is not possible.
+    # def test_add_blind_node(self):
+    #     self.fedora.add_relationship(test_file,
+    #                                  "http://testing.com/hasMultiFacetProp",
+    #                                  "_:bnode42multifacetprop")
+    #     self.fedora.add_relationship2(test_file,
+    #                                   "_:bnode42multifacetprop",
+    #                                   "http://dans.knaw.nl/ontologies/conversions#isConversionOf",
+    #                                   "info:fedora/easy-file:2")
+    #     self.fedora.add_relationship2(test_file,
+    #                                   "_:bnode42multifacetprop",
+    #                                   "http://dans.knaw.nl/ontologies/conversions#conversionDate",
+    #                                    "2016-11-23T00:00:00.000Z", is_literal=True,
+    #                                    data_type="http://www.w3.org/2001/XMLSchema#dateTime")
 
     def test_download(self):
         folder = os.path.join(os.path.expanduser("~"), "tmp", "fedora_download")
         meta = self.fedora.download(test_file, "EASY_FILE", folder=folder)
-        print(meta)
+        #print(meta)
         self.fedora.download(test_file, "RELS-EXT", folder=folder)
         self.fedora.download(test_file, "DC", folder=folder)
         self.fedora.download(test_file, "EASY_FILE_METADATA", folder=folder)

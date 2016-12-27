@@ -7,6 +7,7 @@ import logging
 
 import sys
 
+from fedora.rest.api import Fedora
 from fedora.worker import Worker
 
 
@@ -21,6 +22,9 @@ class TestWorker(unittest.TestCase):
         formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         ch.setFormatter(formatter)
         root.addHandler(ch)
+
+        # set up connection to teasy
+        Fedora(cfg_file=os.path.expanduser("~/src/teasy.cfg"))
 
     def test_id_iter(self):
         worker = Worker()

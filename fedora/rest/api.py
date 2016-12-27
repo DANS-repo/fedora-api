@@ -98,7 +98,7 @@ class Fedora(object):
         See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-addRelationship
         """
         url = self.url + "/objects/" + subj_id + "/relationships/new?" \
-              + self.create_rdf_statement(subj_id, predicate, obj, is_literal, data_type)
+                       + self.create_rdf_statement(subj_id, predicate, obj, is_literal, data_type)
         response = self.session.post(url)
         if response.status_code != requests.codes.ok:
             raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
