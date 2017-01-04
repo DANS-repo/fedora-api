@@ -46,7 +46,7 @@ or after a reset:
 Fedora.reset()
 
 # Instantiate a fresh singleton with your path to the configuration file:
-Fedora(cfg_file="path/to/my_fedora.txt")
+Fedora(cfg_file="path/to/my_fedora.cfg")
 
 # Do the rest of your program:
 ...
