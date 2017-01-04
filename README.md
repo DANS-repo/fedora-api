@@ -33,7 +33,8 @@ expects a configuration file at
 ```bash
 {user_home}/src/fedora.cfg
 ```
-The first line of this file should contain connection details ()protocol+host, port, username, password)
+The first line of this configuration file should contain connection details 
+(protocol+host, port, username, password)
 separated by comma's. Like so:
 ```bash
 host,port,username,password
