@@ -124,9 +124,8 @@ class LocalWorker(object):
                                col_checksum_error=14):
         """
         Verify sha1 checksums over a bunch of files listed in `log_file`. The inspected files are on the local sysyem.
-        This method creates a new `log_file{x}`, alongside the old one, where `x` is an ordinal number.
-        The new `log_file{x}` will be a copy of the `log_file` with an additional column in which checksum errors
-        will be reported.
+        The column with column number `col_checksum_error` should be empty and will be used for reporting checksum
+        errors.
 
         :param log_file: name of the file containing local_path and previously calculated sha1 in columns
         :param has_header: does the `log_file` have column headings, default: True

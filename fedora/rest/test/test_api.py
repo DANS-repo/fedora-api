@@ -68,25 +68,25 @@ class TestFedora(unittest.TestCase):
         # the datatype dateTime should not be set, because of exception in
         # nl.knaw.dans.common.fedora.rdf.FedoraRelationsConverter.rdfToRelations
         self.fedora.add_relationship(test_file,
-                                     "http://dans.knaw.nl/ontologies/conversions#isConversionOf",
-                                     "info:fedora/easy-file:2")
+                                     "https://www.w3.org/TR/2012/CR-prov-o-20121211/#wasDerivedFrom",
+                                     "info:fedora/easy-file:1")
         self.fedora.add_relationship(test_file,
-                                     "http://dans.knaw.nl/ontologies/conversions#isConvertedBy",
-                                     "http://example-archive.org/aips/55e73f76-5b10-11e6-9822-685b357e70b6.5")
+                                     "https://www.w3.org/TR/2012/CR-prov-o-20121211/#wasGeneratedBy",
+                                     "http://dans.knaw.nl/aips/55e73f76-5b10-11e6-9822-685b357e70b6.5")
         self.fedora.add_relationship(test_file,
-                                     "http://dans.knaw.nl/ontologies/conversions#conversionDate",
+                                     "https://www.w3.org/TR/2012/CR-prov-o-20121211/#generatedAtTime",
                                      "2016-11-23T00:00:00Z", is_literal=True) #,
                                      #data_type="http://www.w3.org/2001/XMLSchema#dateTime")
 
     def test_purge_relationship(self):
         self.fedora.purge_relationship(test_file,
-                                       "http://dans.knaw.nl/ontologies/conversions#isConversionOf",
-                                       "info:fedora/easy-file:2")
+                                       "https://www.w3.org/TR/2012/CR-prov-o-20121211/#wasDerivedFrom",
+                                       "info:fedora/easy-file:1")
         self.fedora.purge_relationship(test_file,
-                                       "http://dans.knaw.nl/ontologies/conversions#isConvertedBy",
-                                       "http://example-archive.org/aips/55e73f76-5b10-11e6-9822-685b357e70b6.5")
+                                       "https://www.w3.org/TR/2012/CR-prov-o-20121211/#wasGeneratedBy",
+                                       "http://dans.knaw.nl/aips/55e73f76-5b10-11e6-9822-685b357e70b6.5")
         self.fedora.purge_relationship(test_file,
-                                       "http://dans.knaw.nl/ontologies/conversions#conversionDate",
+                                       "https://www.w3.org/TR/2012/CR-prov-o-20121211/#generatedAtTime",
                                        "2016-11-23T00:00:00Z", is_literal=True) #,
                                        #data_type="http://www.w3.org/2001/XMLSchema#dateTime")
 
