@@ -178,3 +178,41 @@ class Fedora(object):
         if leng > 2 and exts[leng - 1] == exts[leng - 2]:
             filename = ".".join(exts[:-1])
         return filename
+
+    def find_objects(self, query, max_results=25, result_format="xml", fields=("pid", "label")):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA38/REST+API#RESTAPI-findObjects
+        /objects?query=pid%7E*1&maxResults=50&format=true&pid=true&title=true
+
+        """
+        parameters = {"query": query, "maxResults": max_results, "resultFormat": result_format}
+        for field in fields:
+            parameters.update({field: "true"})
+
+        url = self.url + "/objects?" + urllib.parse.urlencode(parameters)
+        return self.as_text(url)
+
+    def risearch(self, query, type="tuples", flush=False, lang="sparql", format="CSV", limit=1000, distinct="off",
+                 stream="on"):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA38/Resource+Index+Search#ResourceIndexSearch-ApplicationInterfaceapp
+
+        risearch?type=tuples&flush=[*true* (default is false)]
+                                     &lang=*itql|sparql*
+                                     &format=*CSV|Simple|Sparql|TSV*
+                                     &limit=[*1* (default is no limit)]
+                                     &distinct=[*on* (default is off)]
+                                     &stream=[*on* (default is off)]
+                                     &query=*QUERY_TEXT_OR_URL*
+        """
+
+        data = {"type": type, "flush": str(flush).lower(), "lang": lang, "format": format, "limit": limit,
+                      "distinct": distinct, "query": query}
+        url = self.url + "/risearch"
+        response = self.session.post(url, data)
+        if response.status_code != requests.codes.ok:
+            raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+
+        return response.text
+
+

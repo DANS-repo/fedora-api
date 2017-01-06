@@ -112,3 +112,23 @@ class TestFedora(unittest.TestCase):
         self.fedora.download(test_file, "RELS-EXT", folder=folder)
         self.fedora.download(test_file, "DC", folder=folder)
         self.fedora.download(test_file, "EASY_FILE_METADATA", folder=folder)
+
+    def test_find_objects(self):
+        query = "cDate>=2015-01-01 pid~easy-dataset:* state=A"
+        result = self.fedora.find_objects(query)
+        print(result)
+
+    def test_risearch(self):
+        datasetId = "easy-dataset:450"
+        query = query = \
+                  "PREFIX dans: <http://dans.knaw.nl/ontologies/relations#> " \
+                + "PREFIX fmodel: <info:fedora/fedora-system:def/model#> " \
+                \
+                + "SELECT ?s " \
+                + "WHERE " \
+                + "{ " \
+                + "   ?s dans:isSubordinateTo <info:fedora/" + datasetId + "> . " \
+                + "   ?s fmodel:hasModel <info:fedora/easy-model:EDM1FILE> " \
+                + "}"
+        result = self.fedora.risearch(query)
+        print(result)
