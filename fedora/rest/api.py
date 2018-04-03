@@ -166,7 +166,7 @@ class Fedora(object):
     @staticmethod
     def compute_filename(response):
         filename = "unknown"
-        # # Fedora response header has filenames with double extensions like "filename.pdf.pdf"
+        # # Fedora response header has filenames with double extensions like "filename.pdf.pdf", "db.mdb.bin"
         # # therefore this code is problematic
         cd = response.headers['content-disposition']
         fn = re.findall("filename=(.+)", cd)
@@ -179,7 +179,7 @@ class Fedora(object):
         # # correct double extension
         exts = filename.split(".")
         leng = len(exts)
-        if leng > 2 and exts[leng - 1] == exts[leng - 2]:
+        if leng > 2: # and exts[leng - 1] == exts[leng - 2]:
             filename = ".".join(exts[:-1])
         return filename
 

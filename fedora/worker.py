@@ -76,7 +76,8 @@ class Worker(object):
                     dataset_id = fmd.fmd_dataset_sid
                     server_date = utils.as_w3c_datetime(meta["Date"])
                     #filename = meta["filename"]
-                    filename = profile.ds_label
+                    #filename = profile.ds_label
+                    filename = fmd.fmd_name
                     file_path = fmd.fmd_path
                     local_path = meta["local-path"]
                     media_type = meta["Content-Type"]
