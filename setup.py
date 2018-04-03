@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='fedora-api',
-    version='1.0.2',
+    version='1.0.3rc',
     packages=['fedora', 'fedora.rest'],
     url='https://github.com/dans-er/fedora-rest',
     license='Apache License Version 2.0',
