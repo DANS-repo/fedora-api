@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import csv
 import unittest
 
 from fedora import utils
@@ -15,3 +16,9 @@ class TestUtils(unittest.TestCase):
         # ValueError
         err = utils.as_w3c_datetime("123456789")
         self.assertEqual("Error: 123456789", err)
+
+    @unittest.skip("not a test")
+    def test_csv_dialects(self):
+        print(csv.list_dialects())
+        # ['excel-tab', 'excel', 'unix']
+        # if you want the standard RFC4180 then roll your own.

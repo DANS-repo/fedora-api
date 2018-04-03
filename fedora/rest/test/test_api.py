@@ -9,10 +9,9 @@ import sys
 
 from fedora.rest.api import Fedora
 
-connection_parameter_file = "teasy.csv"
 test_file = "easy-file:219890"
 
-
+@unittest.skip("on-line test")
 class TestFedora(unittest.TestCase):
 
     @classmethod
@@ -39,9 +38,10 @@ class TestFedora(unittest.TestCase):
         self.assertNotEqual(old, new)
         self.assertEqual(self.fedora, Fedora())
 
+    # auth required
     def test_object_xml(self):
         objectxml = self.fedora.object_xml(test_file)
-        #print(objectxml)
+        print(objectxml)
         self.assertTrue(objectxml.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     def test_datastream_rels_ext(self):
@@ -49,21 +49,30 @@ class TestFedora(unittest.TestCase):
         #print(datastream)
         self.assertTrue("<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">" in datastream)
 
+    # auth required
     def test_datastream_easy_file_metadata(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE_METADATA", content_format="xml")
-        #print(datastream)
+        print(datastream)
         self.assertTrue(datastream.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
-    def test_datastream_easy_file_metadata_content(self):
+    # no auth required -> the file it self can be downloaded without auth
+    def test_datastream_easy_file_metadata_no_content(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE_METADATA")
-        #print(datastream)
+        print(datastream)
         self.assertTrue("<fimd:file-item-md" in datastream)
 
+    # auth required
     def test_datastream_easy_file(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE", content_format="xml")
-        #print(datastream)
+        print(datastream)
         self.assertTrue(datastream.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
+    def test_datastream_easy_file_no_content(self):
+        datastream = self.fedora.datastream(test_file, "EASY_FILE")
+        #print(datastream)
+        # downloads the file
+
+    # auth required
     def test_add_relationship(self):
         # the datatype dateTime should not be set, because of exception in
         # nl.knaw.dans.common.fedora.rdf.FedoraRelationsConverter.rdfToRelations
@@ -78,6 +87,7 @@ class TestFedora(unittest.TestCase):
                                      "2016-11-23T00:00:00Z", is_literal=True) #,
                                      #data_type="http://www.w3.org/2001/XMLSchema#dateTime")
 
+    # auth required
     def test_purge_relationship(self):
         self.fedora.purge_relationship(test_file,
                                        "https://www.w3.org/TR/2012/CR-prov-o-20121211/#wasDerivedFrom",
@@ -89,6 +99,16 @@ class TestFedora(unittest.TestCase):
                                        "https://www.w3.org/TR/2012/CR-prov-o-20121211/#generatedAtTime",
                                        "2016-11-23T00:00:00Z", is_literal=True) #,
                                        #data_type="http://www.w3.org/2001/XMLSchema#dateTime")
+
+    def test_add_mail_address_to_rdf(self):
+        self.fedora.add_relationship(test_file,
+                                     "http://www.w3.org/ns/prov#wasAssociatedWith",
+                                     "mailto:firstname.lastname@dans.knaw.nl")
+
+    def test_purge_mail_address_to_rdf(self):
+        self.fedora.purge_relationship(test_file,
+                                     "http://www.w3.org/ns/prov#wasAssociatedWith",
+                                     "mailto:firstname.lastname@dans.knaw.nl")
 
     # # Adding blind nodes to RELS-EXT is not possible.
     # def test_add_blind_node(self):
@@ -118,9 +138,10 @@ class TestFedora(unittest.TestCase):
         result = self.fedora.find_objects(query)
         print(result)
 
+    # auth required because of post. can query unauthorized with get.
     def test_risearch(self):
         datasetId = "easy-dataset:450"
-        query = query = \
+        query = \
                   "PREFIX dans: <http://dans.knaw.nl/ontologies/relations#> " \
                 + "PREFIX fmodel: <info:fedora/fedora-system:def/model#> " \
                 \
@@ -130,5 +151,16 @@ class TestFedora(unittest.TestCase):
                 + "   ?s dans:isSubordinateTo <info:fedora/" + datasetId + "> . " \
                 + "   ?s fmodel:hasModel <info:fedora/easy-model:EDM1FILE> " \
                 + "}"
+        print(query)
         result = self.fedora.risearch(query)
         print(result)
+
+    @unittest.skip("Ignore Post methods")
+    def test_get_next_pid(self):
+        response = self.fedora.get_next_pid(namespace='easy-file')
+        print(response)
+        # easy-file:350704
+
+    def test_ingest(self):
+        response = self.fedora.ingest(label='A label', namespace='tester')
+        print(response)

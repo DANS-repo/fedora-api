@@ -60,7 +60,7 @@ class Fedora(object):
                 cls._instance = None
                 raise FedoraException("Could not connect to %s" % cls.url)
             else:
-                LOG.info("Connected to %s" % cls.url)
+                LOG.info("Connected to %s\n" % cls.url)
         return cls._instance
 
     @staticmethod
@@ -78,6 +78,8 @@ class Fedora(object):
     def object_xml(self, object_id):
         """
         See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-getObjectXML
+
+        auth required
         """
         url = self.url + "/objects/" + object_id + "/objectXML"
         return self.as_text(url)
@@ -85,6 +87,8 @@ class Fedora(object):
     def datastream(self, object_id, ds_id, content_format="content"):
         """
         See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-getDatastream
+
+        auth required for some datastreams
         """
         if content_format == "content":
             postfix = "/content"
@@ -98,7 +102,7 @@ class Fedora(object):
         See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-addRelationship
         """
         url = self.url + "/objects/" + subj_id + "/relationships/new?" \
-                       + self.create_rdf_statement(subj_id, predicate, obj, is_literal, data_type)
+              + self.create_rdf_statement(subj_id, predicate, obj, is_literal, data_type)
         response = self.session.post(url)
         if response.status_code != requests.codes.ok:
             raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
@@ -182,6 +186,7 @@ class Fedora(object):
     def find_objects(self, query, max_results=25, result_format="xml", fields=("pid", "label")):
         """
         See: https://wiki.duraspace.org/display/FEDORA38/REST+API#RESTAPI-findObjects
+
         /objects?query=pid%7E*1&maxResults=50&format=true&pid=true&title=true
 
         """
@@ -207,7 +212,7 @@ class Fedora(object):
         """
 
         data = {"type": type, "flush": str(flush).lower(), "lang": lang, "format": format, "limit": limit,
-                      "distinct": distinct, "query": query}
+                "distinct": distinct, "query": query}
         url = self.url + "/risearch"
         response = self.session.post(url, data)
         if response.status_code != requests.codes.ok:
@@ -215,4 +220,39 @@ class Fedora(object):
 
         return response.text
 
+    def ingest(self, pid=None, label=None, format=None, encoding=None, namespace=None, owner_id=None, log_message=None,
+               ignore_mime=False):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA38/REST+API#RESTAPI-ingest
 
+        /objects/ [{pid}| new] ? [label] [format] [encoding] [namespace] [ownerId] [logMessage] [ignoreMime]
+
+        POST: /objects/new?namespace=demo
+        POST: /objects/test:100?label=Test
+        :return: the PID of the newly ingested object
+        """
+        query = {'label': label, 'format': format, 'encoding': encoding, 'namespace': namespace, 'ownerId': owner_id,
+                 'logMessage': log_message, 'ignoreMime': ignore_mime}
+        query = {k:v for k, v in query.items() if v is not None}
+
+        npid = pid if pid else 'new'
+        url = self.url + "/objects/" + npid + "?" + urllib.parse.urlencode(query)
+        response = self.session.post(url);
+        if response.status_code != requests.codes.created:
+            raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response.text
+
+    def get_next_pid(self, num_pids=1, namespace='test', format='xml'):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA38/REST+API#RESTAPI-getNextPID
+
+        /objects/nextPID ? [numPIDs] [namespace] [format]
+        POST: /objects/nextPID?numPIDs=5&namespace=test&format=xml
+        :return: next PIDs in either xml or html
+        """
+        query = {'numPIDs': num_pids, 'namespace': namespace, 'format': format}
+        url = self.url + "/objects/nextPID?" + urllib.parse.urlencode(query)
+        response = self.session.post(url);
+        if response.status_code != requests.codes.ok:
+            raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response.text

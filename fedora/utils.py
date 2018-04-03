@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import csv
 import hashlib
 import time
 from datetime import datetime
@@ -53,5 +54,15 @@ def sha1_for_file(filename, block_size=2**14):
         for buf in iter(partial(f.read, block_size), b''):
             d.update(buf)
     return d.hexdigest()
+
+
+class RFC4180(object):
+    delimiter = ','
+    quotechar = '"'
+    escapechar = None
+    doublequote = True
+    skipinitialspace = False
+    lineterminator = '\r\n'
+    quoting = csv.QUOTE_MINIMAL
 
 

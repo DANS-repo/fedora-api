@@ -18,7 +18,7 @@ class Worker(object):
     Do default chores with the fedora rest api.
 
     A worker reads and writes csv-files. The default dialect for such reading and writing is encapsulated in the
-    class csv.excel. You can specify your own dialect by providing a class with the appropriate attributes.
+    class utils.RFC4180. You can specify your own dialect by providing a class with the appropriate attributes.
     Example::
 
         class MyDialect(object):
@@ -31,7 +31,7 @@ class Worker(object):
             quoting = csv.QUOTE_MINIMAL
 
     """
-    def __init__(self, dialect=csv.excel):
+    def __init__(self, dialect=utils.RFC4180):
         self.fedora = Fedora()
         self.dialect = dialect
 
@@ -55,7 +55,7 @@ class Worker(object):
         checksum_error_count = 0
         work_log = os.path.abspath(log_file)
         os.makedirs(os.path.dirname(work_log), exist_ok=True)
-        with open(work_log, 'w', newline='') as csv_log:
+        with open(work_log, 'w', newline='', ) as csv_log:
             csv_writer = csv.writer(csv_log, dialect=self.dialect)
             csv_writer.writerow(["file_id", "dataset_id", "server_date", "filename", "path", "local_path",
                                  "media_type", "size",
@@ -123,7 +123,7 @@ class LocalWorker(object):
     def verify_checksums_local(self, log_file, has_header=True, col_local_path=5, col_checksum=9,
                                col_checksum_error=14):
         """
-        Verify sha1 checksums over a bunch of files listed in `log_file`. The inspected files are on the local sysyem.
+        Verify sha1 checksums over a bunch of files listed in `log_file`. The inspected files are on the local system.
         The column with column number `col_checksum_error` should be empty and will be used for reporting checksum
         errors.
 

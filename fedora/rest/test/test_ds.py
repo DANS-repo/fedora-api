@@ -9,9 +9,10 @@ from fedora.rest.api import Fedora
 from fedora.rest.ds import DatastreamProfile, FileItemMetadata
 
 connection_parameter_file = "teasy.csv"
-test_file = "easy-file:219890"
+test_file = "easy-file:1950715"
 
 
+@unittest.skip("on-line test")
 class TestDatastreamProfile(unittest.TestCase):
 
     @classmethod
@@ -38,14 +39,14 @@ class TestDatastreamProfile(unittest.TestCase):
     def test_fetch_easy_file_metadata_profile(self):
         dsp = DatastreamProfile(test_file, "EASY_FILE_METADATA")
         dsp.fetch()
-        #print(dsp.props)
+        print(dsp.props)
         self.assertEqual(15, len(dsp.props))
         self.assertIsNotNone(dsp.ds_size)
 
     def test_fetch_rels_ext_profile(self):
         dsp = DatastreamProfile(test_file, "RELS-EXT")
         dsp.fetch()
-        #print(dsp.props)
+        print(dsp.props)
         self.assertEqual(15, len(dsp.props))
         self.assertIsNotNone(dsp.ds_size)
 

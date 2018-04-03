@@ -11,6 +11,7 @@ from fedora.rest.api import Fedora
 from fedora.worker import Worker, LocalWorker
 
 
+@unittest.skip("on-line test")
 class TestWorker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -53,6 +54,7 @@ class TestWorker(unittest.TestCase):
         self.assertEqual(0, checksum_error_count)
 
 
+@unittest.skip
 class TestLocalWorker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
