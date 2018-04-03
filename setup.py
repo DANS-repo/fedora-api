@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name='fedora-rest',
-    version='0.1',
+    name='fedora-api',
+    version='1.0.1',
     packages=['fedora', 'fedora.rest'],
     url='https://github.com/dans-er/fedora-rest',
     license='Apache License Version 2.0',
