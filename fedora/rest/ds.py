@@ -5,9 +5,10 @@ import xml.etree.ElementTree as ET
 import rdflib as rdflib
 from rdflib import URIRef
 
-from fedora.rest.api import Fedora
+from fedora.rest.api import Fedora, FedoraException
 
-ns = {"dsp": "http://www.fedora.info/definitions/1/0/management/"}
+ns = {"dsp": "http://www.fedora.info/definitions/1/0/management/",
+      "damd": "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/"}
 
 
 def __text__(element):
@@ -107,6 +108,30 @@ class FileItemMetadata(object):
         self.fmd_visible_to = __text__(root.find("visibleTo"))
         self.fmd_accessible_to = __text__(root.find("accessibleTo"))
         self.props = {k: v for k, v in self.__dict__.items() if k.startswith("fmd_")}
+
+
+class AdministrativeMetadata(object):
+
+    def __init__(self, object_id):
+        if not str(object_id).startswith("easy-dataset"):
+            raise FedoraException("object %s has no AMD" % object_id)
+        self.fedora = Fedora()
+        self.object_id = object_id
+
+        self.amd_dataset_state = None
+        self.amd_previous_state = None
+        self.amd_last_state_change = None
+        self.amd_depositor_id = None
+        self.props = {}
+
+    def fetch(self):
+        xml = self.fedora.datastream(self.object_id, "AMD")
+        root = ET.fromstring(xml)
+        self.amd_dataset_state = __text__(root.find("datasetState"))
+        self.amd_previous_state = __text__(root.find("previousState"))
+        self.amd_last_state_change = __text__(root.find("lastStateChange"))
+        self.amd_depositor_id = __text__(root.find("depositorId"))
+        self.props = {k: v for k, v in self.__dict__.items() if k.startswith("amd_")}
 
 
 class RelsExt(object):

@@ -6,10 +6,10 @@ import sys
 import unittest
 
 from fedora.rest.api import Fedora
-from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt
+from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt, AdministrativeMetadata
 
-connection_parameter_file = "teasy.csv"
 test_file = "easy-file:1950715"
+test_dataset = "easy-dataset:5958"
 
 
 @unittest.skip("on-line test")
@@ -70,6 +70,28 @@ class TestFileItemMetadata(unittest.TestCase):
         print(fim.props)
         self.assertEqual(10, len(fim.props))
         self.assertIsNotNone(fim.fmd_size)
+
+
+class TestAdministrativeMetadata(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # set up logging
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
+
+        # set up connection to teasy
+        Fedora(cfg_file=os.path.expanduser("~/src/teasy.cfg"))
+
+    def test_fetch(self):
+        amd = AdministrativeMetadata(test_dataset)
+        amd.fetch()
+        print(amd.props)
 
 
 class TestRelsExt(unittest.TestCase):

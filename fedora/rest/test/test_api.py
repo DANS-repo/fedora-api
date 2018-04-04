@@ -10,6 +10,7 @@ import sys
 from fedora.rest.api import Fedora
 
 test_file = "easy-file:219890"
+test_dataset = "easy-dataset:5958"
 
 @unittest.skip("on-line test")
 class TestFedora(unittest.TestCase):
@@ -60,6 +61,11 @@ class TestFedora(unittest.TestCase):
         datastream = self.fedora.datastream(test_file, "EASY_FILE_METADATA")
         print(datastream)
         self.assertTrue("<fimd:file-item-md" in datastream)
+
+    def test_datastream_easy_administrative_metadata_no_content(self):
+        datastream = self.fedora.datastream(test_dataset, "AMD")
+        print(datastream)
+        #self.assertTrue("<fimd:file-item-md" in datastream)
 
     # auth required
     def test_datastream_easy_file(self):
