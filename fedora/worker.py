@@ -8,7 +8,7 @@ import logging
 
 from fedora import utils
 from fedora.rest.api import Fedora, FedoraException
-from fedora.rest.ds import DatastreamProfile, FileItemMetadata
+from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt
 
 LOG = logging.getLogger(__name__)
 
@@ -74,10 +74,13 @@ class Worker(object):
                     fmd.fetch()
 
                     dataset_id = fmd.fmd_dataset_sid
+                    # as of late the dataset id is not in FileItemMetadata anymore
+                    if dataset_id is None or dataset_id == '':
+                        rex = RelsExt(object_id)
+                        rex.fetch()
+                        dataset_id = rex.get_is_subordinate_to()
                     server_date = utils.as_w3c_datetime(meta["Date"])
-                    #filename = meta["filename"]
-                    #filename = profile.ds_label
-                    filename = fmd.fmd_name
+                    filename = meta["filename"]
                     file_path = fmd.fmd_path
                     local_path = meta["local-path"]
                     media_type = meta["Content-Type"]

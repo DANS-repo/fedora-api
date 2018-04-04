@@ -179,7 +179,7 @@ class Fedora(object):
         # # correct double extension
         exts = filename.split(".")
         leng = len(exts)
-        if leng > 2: # and exts[leng - 1] == exts[leng - 2]:
+        if leng > 2:
             filename = ".".join(exts[:-1])
         return filename
 

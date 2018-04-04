@@ -2,9 +2,12 @@
 # -*- coding: utf-8 -*-
 import xml.etree.ElementTree as ET
 
+import rdflib as rdflib
+from rdflib import URIRef
+
 from fedora.rest.api import Fedora
 
-ns = {"dsp" : "http://www.fedora.info/definitions/1/0/management/"}
+ns = {"dsp": "http://www.fedora.info/definitions/1/0/management/"}
 
 
 def __text__(element):
@@ -105,3 +108,22 @@ class FileItemMetadata(object):
         self.fmd_accessible_to = __text__(root.find("accessibleTo"))
         self.props = {k: v for k, v in self.__dict__.items() if k.startswith("fmd_")}
 
+
+class RelsExt(object):
+
+    def __init__(self, object_id):
+        self.fedora = Fedora()
+        self.object_id = object_id
+        self.graph = rdflib.Graph()
+        self.subject = URIRef('info:fedora/' + self.object_id)
+
+    def fetch(self):
+        self.graph.parse(data=self.fedora.datastream(self.object_id, "RELS-EXT"))
+
+    def get_graph(self):
+        return self.graph
+
+    def get_is_subordinate_to(self):
+        return \
+        str(self.graph.value(self.subject, URIRef('http://dans.knaw.nl/ontologies/relations#isSubordinateTo'))).split(
+            '/')[1]
