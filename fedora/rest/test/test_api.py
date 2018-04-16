@@ -7,6 +7,8 @@ import logging
 
 import sys
 
+from fedora.utils import sha1_for_file
+
 from fedora.rest.api import Fedora
 
 test_file = "easy-file:219890"
@@ -167,6 +169,26 @@ class TestFedora(unittest.TestCase):
         print(response)
         # easy-file:350704
 
+    @unittest.skip("Ignore post methods")
     def test_ingest(self):
         response = self.fedora.ingest(label='A label', namespace='tester')
         print(response)
+
+    @unittest.skip("Ignore post methods")
+    def test_add_managed_datastream(self):
+        filepath = 'resources/license.pdf'
+        sha1 = sha1_for_file(filepath)
+        pid = 'easy-dataset:450'
+        ds_id = 'DATASET_LICENSE'
+        ds_label = 'license.pdf'
+        mediatype = 'application/pdf'
+        response = self.fedora.add_managed_datastream(pid, ds_id, ds_label, filepath, mediatype, sha1)
+        print(response)
+
+    def test_list_datastreams(self):
+        pid = 'easy-dataset:450'
+        text = self.fedora.list_datastreams(pid)
+        print(text)
+
+
+

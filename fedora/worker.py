@@ -46,7 +46,7 @@ class Worker(object):
         :param id_list: either a list of file-id's or the name of the file that contains this list
         :param dump_dir: where to store downloaded files
         :param log_file: where to write the work-log
-        :param dialect: what csv dialect should the work-log be written in, default: :class:`util.RFC4180`
+        :param dialect: what csv dialect should the work-log be written in, default: :class:`utils.RFC4180`
         :param id_in_path: should (the number part of) the object_id be part of the local path, default: `True`
         :param chunk_size: size of chuncks for read-write operation, default: 1024
         :return: count of checksum errors

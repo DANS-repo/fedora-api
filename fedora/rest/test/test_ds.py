@@ -6,7 +6,7 @@ import sys
 import unittest
 
 from fedora.rest.api import Fedora
-from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt, AdministrativeMetadata
+from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt, AdministrativeMetadata, ObjectDatastreams
 
 test_file = "easy-file:1950715"
 test_dataset = "easy-dataset:5958"
@@ -27,7 +27,8 @@ class TestDatastreamProfile(unittest.TestCase):
         root.addHandler(ch)
 
         # set up connection to teasy
-        Fedora(cfg_file=os.path.expanduser("~/src/teasy.cfg"))
+        cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
+        cls.fedora = Fedora(cfg_file=cfg_file)
 
     def test_fetch_easy_file_profile(self):
         dsp = DatastreamProfile(test_file, "EASY_FILE")
@@ -112,3 +113,30 @@ class TestRelsExt(unittest.TestCase):
         rex.fetch()
         dsid = rex.get_is_subordinate_to()
         print(dsid)
+
+
+class TestObjectDatastreams(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # set up logging
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
+
+        # set up connection to teasy
+        Fedora.reset()
+        cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
+        cls.fedora = Fedora(cfg_file=cfg_file)
+
+    def test_fetch(self):
+        pid = 'easy-dataset:450'
+        ods = ObjectDatastreams(pid)
+        dss = ods.fetch()
+        print(dss['EMD'])
+        print('EMD' in dss)
+

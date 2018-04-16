@@ -152,3 +152,21 @@ class RelsExt(object):
         return \
         str(self.graph.value(self.subject, URIRef('http://dans.knaw.nl/ontologies/relations#isSubordinateTo'))).split(
             '/')[1]
+
+
+class ObjectDatastreams(object):
+
+    def __init__(self, object_id):
+        self.fedora = Fedora()
+        self.object_id = object_id
+
+    def fetch(self):
+        xml = self.fedora.list_datastreams(self.object_id)
+        root = ET.fromstring(xml)
+        dss = {}
+        for element in root:
+            dss.update({element.attrib['dsid']: element.attrib})
+        return dss
+
+
+

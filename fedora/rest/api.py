@@ -6,6 +6,7 @@ import re
 import urllib.parse
 
 import requests
+from fedora.utils import sha1_for_file
 
 LOG = logging.getLogger(__name__)
 CFG_FILE = "src/fedora.cfg"
@@ -96,6 +97,34 @@ class Fedora(object):
             postfix = "?format=" + content_format
         url = self.url + "/objects/" + object_id + "/datastreams/" + ds_id + postfix
         return self.as_text(url)
+
+    def add_managed_datastream(self, pid, ds_id, ds_label, filepath, mediatype, sha1):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-addDatastream
+
+        /objects/{pid}/datastreams/{dsID} ? [controlGroup] [dsLocation] [altIDs] [dsLabel] [versionable] [dsState] [formatURI] [checksumType] [checksum] [mimeType] [logMessage]
+
+        """
+        url = self.url + '/objects/' + pid + '/datastreams/' + ds_id
+        payload = {'controlGroup': 'M', 'dsLabel': ds_label, 'checksumType': 'SHA-1', 'checksum': sha1}
+        filename = os.path.basename(filepath)
+        with open(filepath, 'rb') as file:
+            files = {'file': (filename, file, mediatype, {'Expires': '0'})}
+            response = self.session.post(url, params=payload, files=files)
+            if response.status_code != 201:
+                raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+            return response
+
+    def list_datastreams(self, pid):
+        """
+        /objects/{pid}/datastreams ? [format] [asOfDateTime]
+        """
+        url = self.url + '/objects/' + pid + '/datastreams'
+        payload = {'format': 'xml'}
+        response = self.session.get(url, params=payload)
+        if response.status_code != 200:
+            raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response.text
 
     def add_relationship(self, subj_id, predicate, obj, is_literal=False, data_type=None):
         """
