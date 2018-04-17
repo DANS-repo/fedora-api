@@ -62,6 +62,7 @@ class Fedora(object):
                 raise FedoraException("Could not connect to %s" % cls.url)
             else:
                 LOG.info("Connected to %s\n" % cls.url)
+                print('Connected to %s, logged in as %s' % (cls.url, username))
         return cls._instance
 
     @staticmethod

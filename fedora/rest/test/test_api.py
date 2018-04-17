@@ -178,7 +178,7 @@ class TestFedora(unittest.TestCase):
     def test_add_managed_datastream(self):
         filepath = 'resources/license.pdf'
         sha1 = sha1_for_file(filepath)
-        pid = 'easy-dataset:450'
+        pid = 'easy-dataset:890'
         ds_id = 'DATASET_LICENSE'
         ds_label = 'license.pdf'
         mediatype = 'application/pdf'
