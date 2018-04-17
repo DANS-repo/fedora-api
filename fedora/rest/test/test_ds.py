@@ -6,13 +6,14 @@ import sys
 import unittest
 
 from fedora.rest.api import Fedora
-from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt, AdministrativeMetadata, ObjectDatastreams
+from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt, AdministrativeMetadata, ObjectDatastreams, \
+    EasyMetadata
 
 test_file = "easy-file:1950715"
 test_dataset = "easy-dataset:5958"
 
 
-@unittest.skip("on-line test")
+#@unittest.skip("on-line test")
 class TestDatastreamProfile(unittest.TestCase):
 
     @classmethod
@@ -95,6 +96,28 @@ class TestAdministrativeMetadata(unittest.TestCase):
         print(amd.props)
 
 
+class TestEasyMetadata(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # set up logging
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
+
+        # set up connection to teasy
+        Fedora(cfg_file=os.path.expanduser("~/src/teasy.cfg"))
+
+    def test_fetch(self):
+        emd = EasyMetadata('easy-dataset:20')
+        emd.fetch()
+        self.assertEqual('10.5072/dans-249-exct', emd.doi)
+
+
 class TestRelsExt(unittest.TestCase):
 
     @classmethod
@@ -137,6 +160,6 @@ class TestObjectDatastreams(unittest.TestCase):
         pid = 'easy-dataset:450'
         ods = ObjectDatastreams(pid)
         dss = ods.fetch()
-        print(dss['EMD'])
+        print(dss['DATASET_LICENSE'])
         print('EMD' in dss)
 

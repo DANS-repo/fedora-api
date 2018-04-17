@@ -8,7 +8,10 @@ from rdflib import URIRef
 from fedora.rest.api import Fedora, FedoraException
 
 ns = {"dsp": "http://www.fedora.info/definitions/1/0/management/",
-      "damd": "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/"}
+      "damd": "http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/",
+      "dc": "http://purl.org/dc/elements/1.1/",
+      "emd": "http://easy.dans.knaw.nl/easy/easymetadata/",
+      "eas": "http://easy.dans.knaw.nl/easy/easymetadata/eas/"}
 
 
 def __text__(element):
@@ -133,6 +136,26 @@ class AdministrativeMetadata(object):
         self.amd_depositor_id = __text__(root.find("depositorId"))
         self.props = {k: v for k, v in self.__dict__.items() if k.startswith("amd_")}
 
+
+class EasyMetadata(object):
+
+    def __init__(self, object_id):
+        if not str(object_id).startswith("easy-dataset"):
+            raise FedoraException("object %s has no EMD" % object_id)
+        self.fedora = Fedora()
+        self.object_id = object_id
+
+        self.doi = None
+
+    def fetch(self):
+        xml = self.fedora.datastream(self.object_id, "EMD")
+        root = ET.fromstring(xml)
+        emd_identifier = root.find("emd:identifier", ns)
+        if emd_identifier:
+            for child in emd_identifier:
+                if '{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme' in child.attrib \
+                        and child.attrib['{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme'] == 'DOI':
+                    self.doi = child.text
 
 class RelsExt(object):
 
