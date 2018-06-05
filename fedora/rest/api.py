@@ -64,6 +64,20 @@ class Fedora(object):
                 print('Connected to %s, logged in as %s\n' % (cls.url, username))
         return cls._instance
 
+    def __init__(self, host, port, username, password):
+        if not host.startswith("http"):
+            host = "http://" + host
+        self.url = host + ":" + str(port) + "/fedora"
+        self.session = requests.Session()
+        self.session.headers = {'User-Agent': 'Mozilla/5.0'}
+        self.session.auth = (username, password)
+        response = self.session.get(self.url)
+        if response.status_code != requests.codes.ok:
+            raise FedoraException("Could not connect to %s" % self.url)
+        else:
+            LOG.info("Connected to %s\n" % self.url)
+            print('Connected to %s, logged in as %s\n' % (self.url, username))
+
     @staticmethod
     def reset():
         Fedora._instance = None
