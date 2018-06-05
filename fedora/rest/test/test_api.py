@@ -14,7 +14,7 @@ from fedora.rest.api import Fedora
 test_file = "easy-file:219890"
 test_dataset = "easy-dataset:5958"
 
-@unittest.skip("on-line test")
+#@unittest.skip("on-line test")
 class TestFedora(unittest.TestCase):
 
     @classmethod
@@ -174,7 +174,7 @@ class TestFedora(unittest.TestCase):
         response = self.fedora.ingest(label='A label', namespace='tester')
         print(response)
 
-    @unittest.skip("Ignore post methods")
+    #@unittest.skip("Ignore post methods")
     def test_add_managed_datastream(self):
         filepath = 'resources/license.pdf'
         sha1 = sha1_for_file(filepath)

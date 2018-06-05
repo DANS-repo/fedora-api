@@ -6,7 +6,6 @@ import re
 import urllib.parse
 
 import requests
-from fedora.utils import sha1_for_file
 
 LOG = logging.getLogger(__name__)
 CFG_FILE = "src/fedora.cfg"
@@ -54,7 +53,7 @@ class Fedora(object):
             cls.url = host + ":" + str(port) + "/fedora"
             cls.session = requests.Session()
             cls.session.headers = {'User-Agent': 'Mozilla/5.0'}
-            cls.session.auth = (username, password)
+            cls.session.auth = (username, password.strip())
             LOG.info("Created session for %s" % cls.url)
             response = cls.session.get(cls.url)
             if response.status_code != requests.codes.ok:
@@ -62,7 +61,7 @@ class Fedora(object):
                 raise FedoraException("Could not connect to %s" % cls.url)
             else:
                 LOG.info("Connected to %s\n" % cls.url)
-                print('Connected to %s, logged in as %s' % (cls.url, username))
+                print('Connected to %s, logged in as %s\n' % (cls.url, username))
         return cls._instance
 
     @staticmethod
@@ -107,7 +106,7 @@ class Fedora(object):
 
         """
         url = self.url + '/objects/' + pid + '/datastreams/' + ds_id
-        payload = {'controlGroup': 'M', 'dsLabel': ds_label, 'checksumType': 'SHA-1', 'checksum': sha1}
+        payload = {'controlGroup': 'M', 'dsLabel': ds_label, 'checksumType': 'SHA-1', 'checksum': sha1, 'mimeType': mediatype}
         filename = os.path.basename(filepath)
         with open(filepath, 'rb') as file:
             files = {'file': (filename, file, mediatype, {'Expires': '0'})}
