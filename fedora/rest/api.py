@@ -33,36 +33,36 @@ class Fedora(object):
     """
     _instance = None
 
-    def __new__(cls, *args, cfg_file=None, **kwargs):
-        if not cls._instance:
-            LOG.info("Creating a new Fedora instance")
-            cls._instance = super(Fedora, cls).__new__(cls)
-            if cfg_file is None:
-                cfg_file = os.path.join(os.path.expanduser("~"), CFG_FILE)
-            if not os.path.exists(cfg_file):
-                raise FedoraException("No configuration file found at %s" % cfg_file)
-            with open(cfg_file) as cfg:
-                line = cfg.readline()
-            lspl = line.split(",")
-            if len(lspl) < 4:
-                raise FedoraException("Invalid configuration file at %s,"
-                                      "\n\tfirst line of file should contain 'host,port,username,password'." % cfg_file)
-            host, port, username, password = lspl
-            if not host.startswith("http"):
-                host = "http://" + host
-            cls.url = host + ":" + str(port) + "/fedora"
-            cls.session = requests.Session()
-            cls.session.headers = {'User-Agent': 'Mozilla/5.0'}
-            cls.session.auth = (username, password.strip())
-            LOG.info("Created session for %s" % cls.url)
-            response = cls.session.get(cls.url)
-            if response.status_code != requests.codes.ok:
-                cls._instance = None
-                raise FedoraException("Could not connect to %s" % cls.url)
-            else:
-                LOG.info("Connected to %s\n" % cls.url)
-                print('Connected to %s, logged in as %s\n' % (cls.url, username))
-        return cls._instance
+    # def __new__(cls, *args, cfg_file=None, **kwargs):
+    #     if not cls._instance:
+    #         LOG.info("Creating a new Fedora instance")
+    #         cls._instance = super(Fedora, cls).__new__(cls)
+    #         if cfg_file is None:
+    #             cfg_file = os.path.join(os.path.expanduser("~"), CFG_FILE)
+    #         if not os.path.exists(cfg_file):
+    #             raise FedoraException("No configuration file found at %s" % cfg_file)
+    #         with open(cfg_file) as cfg:
+    #             line = cfg.readline()
+    #         lspl = line.split(",")
+    #         if len(lspl) < 4:
+    #             raise FedoraException("Invalid configuration file at %s,"
+    #                                   "\n\tfirst line of file should contain 'host,port,username,password'." % cfg_file)
+    #         host, port, username, password = lspl
+    #         if not host.startswith("http"):
+    #             host = "http://" + host
+    #         cls.url = host + ":" + str(port) + "/fedora"
+    #         cls.session = requests.Session()
+    #         cls.session.headers = {'User-Agent': 'Mozilla/5.0'}
+    #         cls.session.auth = (username, password.strip())
+    #         LOG.info("Created session for %s" % cls.url)
+    #         response = cls.session.get(cls.url)
+    #         if response.status_code != requests.codes.ok:
+    #             cls._instance = None
+    #             raise FedoraException("Could not connect to %s" % cls.url)
+    #         else:
+    #             LOG.info("Connected to %s\n" % cls.url)
+    #             print('Connected to %s, logged in as %s\n' % (cls.url, username))
+    #     return cls._instance
 
     def __init__(self, host, port, username, password):
         if not host.startswith("http"):
