@@ -174,7 +174,7 @@ class TestFedora(unittest.TestCase):
         response = self.fedora.ingest(label='A label', namespace='tester')
         print(response)
 
-    #@unittest.skip("Ignore post methods")
+    @unittest.skip("Ignore post methods")
     def test_add_managed_datastream(self):
         filepath = 'resources/license.pdf'
         sha1 = sha1_for_file(filepath)

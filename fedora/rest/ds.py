@@ -37,8 +37,8 @@ def __bool__(element):
 
 class DatastreamProfile(object):
 
-    def __init__(self, object_id, ds_id):
-        self.fedora = Fedora()
+    def __init__(self, object_id, ds_id, fedora):
+        self.fedora = fedora
         self.object_id = object_id
         self.ds_id = ds_id
 
@@ -80,8 +80,8 @@ class DatastreamProfile(object):
 
 class FileItemMetadata(object):
 
-    def __init__(self, object_id):
-        self.fedora = Fedora()
+    def __init__(self, object_id, fedora):
+        self.fedora = fedora
         self.object_id = object_id
 
         self.fmd_sid = None
@@ -115,10 +115,10 @@ class FileItemMetadata(object):
 
 class AdministrativeMetadata(object):
 
-    def __init__(self, object_id):
+    def __init__(self, object_id, fedora):
         if not str(object_id).startswith("easy-dataset"):
             raise FedoraException("object %s has no AMD" % object_id)
-        self.fedora = Fedora()
+        self.fedora = fedora
         self.object_id = object_id
 
         self.amd_dataset_state = None
@@ -139,10 +139,10 @@ class AdministrativeMetadata(object):
 
 class EasyMetadata(object):
 
-    def __init__(self, object_id):
+    def __init__(self, object_id, fedora):
         if not str(object_id).startswith("easy-dataset"):
             raise FedoraException("object %s has no EMD" % object_id)
-        self.fedora = Fedora()
+        self.fedora = fedora
         self.object_id = object_id
 
         self.doi = None
@@ -159,8 +159,8 @@ class EasyMetadata(object):
 
 class RelsExt(object):
 
-    def __init__(self, object_id):
-        self.fedora = Fedora()
+    def __init__(self, object_id, fedora):
+        self.fedora = fedora
         self.object_id = object_id
         self.graph = rdflib.Graph()
         self.subject = URIRef('info:fedora/' + self.object_id)
@@ -179,8 +179,8 @@ class RelsExt(object):
 
 class ObjectDatastreams(object):
 
-    def __init__(self, object_id):
-        self.fedora = Fedora()
+    def __init__(self, object_id, fedora):
+        self.fedora = fedora
         self.object_id = object_id
 
     def fetch(self):
