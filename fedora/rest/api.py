@@ -148,7 +148,7 @@ class Fedora(object):
         :return: datastream profile
         """
         url = self.url + '/objects/' + pid + '/datastreams/' + ds_id
-        payload = {'dsLabel': ds_label, 'checksumType': 'DISABLED',
+        payload = {'dsLabel': ds_label, 'checksumType': 'SHA-1', # fedora computes another checksum 'checksum': sha1,
                    'mimeType': mediatype, 'formatURI': formatURI, 'logMessage': logMessage}
         filename = os.path.basename(filepath)
         with open(filepath, 'rb') as file:

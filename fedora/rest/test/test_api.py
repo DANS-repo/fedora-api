@@ -6,7 +6,7 @@ import unittest
 import logging
 
 import sys
-
+import time
 import xml.etree.ElementTree as ET
 
 from fedora.utils import sha1_for_file
@@ -196,9 +196,11 @@ class TestFedora(unittest.TestCase):
     @unittest.skip('Ignore put methods')
     def test_modify_datastream(self):
         # get the existing datastream 'AMD'
+        dataset_id = test_dataset
+        # dataset_id = 'easy-dataset:387754'
         ET.register_namespace('damd', 'http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/')
         ET.register_namespace('wfs', 'http://easy.dans.knaw.nl/easy/workflow/')
-        xml = self.fedora.datastream(test_dataset, "AMD")
+        xml = self.fedora.datastream(dataset_id, "AMD")
         root = ET.fromstring(xml)
         eldp = root.find('depositorId')
         existing_depositor_id = eldp.text
@@ -212,8 +214,10 @@ class TestFedora(unittest.TestCase):
         os.makedirs(folder, exist_ok=True)
         local_path = os.path.join(folder, 'damd.xml')
         doc.write(local_path, encoding='UTF-8', xml_declaration=True)
+        #time.sleep(15)
 
-        response = self.fedora.modify_datastream(test_dataset, 'AMD',
+
+        response = self.fedora.modify_datastream(dataset_id, 'AMD',
                                                  ds_label='Administrative metadata for this dataset',
                                                  filepath=local_path,
                                                  mediatype='application/xml',
@@ -222,12 +226,12 @@ class TestFedora(unittest.TestCase):
         print(response)
         self.assertEqual(200, response.status_code)
 
-        xml = self.fedora.datastream(test_dataset, "AMD")
+        xml = self.fedora.datastream(dataset_id, "AMD")
         root = ET.fromstring(xml)
         eldp = root.find('depositorId')
         self.assertEqual(new_depositor_id, eldp.text)
 
-        dsp = DatastreamProfile(test_dataset, 'AMD', self.fedora)
+        dsp = DatastreamProfile(dataset_id, 'AMD', self.fedora)
         dsp.from_xml(response.text)
         print(dsp.props)
 
