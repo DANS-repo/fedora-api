@@ -7,9 +7,12 @@ import logging
 
 import sys
 
+import xml.etree.ElementTree as ET
+
 from fedora.utils import sha1_for_file
 
 from fedora.rest.api import Fedora
+from fedora.rest.ds import DatastreamProfile
 
 test_file = "easy-file:219890"
 test_dataset = "easy-dataset:5958"
@@ -29,14 +32,14 @@ class TestFedora(unittest.TestCase):
         root.addHandler(ch)
 
         cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
-        cls.fedora = Fedora(cfg_file=cfg_file)
+        cls.fedora = Fedora.from_file(cfg_file=cfg_file)
 
     @unittest.skip
     def test_reset(self):
         old = str(self.fedora)
-        Fedora.reset()
+        #Fedora.reset()
         cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
-        self.fedora = Fedora(cfg_file=cfg_file)
+        self.fedora = Fedora.from_file(cfg_file=cfg_file)
         new = str(self.fedora)
         self.assertNotEqual(old, new)
         self.assertEqual(self.fedora, Fedora())
@@ -44,7 +47,7 @@ class TestFedora(unittest.TestCase):
     # auth required
     def test_object_xml(self):
         objectxml = self.fedora.object_xml(test_file)
-        print(objectxml)
+        #print(objectxml)
         self.assertTrue(objectxml.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     def test_datastream_rels_ext(self):
@@ -55,24 +58,24 @@ class TestFedora(unittest.TestCase):
     # auth required
     def test_datastream_easy_file_metadata(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE_METADATA", content_format="xml")
-        print(datastream)
+        #print(datastream)
         self.assertTrue(datastream.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     # no auth required -> the file it self can be downloaded without auth
     def test_datastream_easy_file_metadata_no_content(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE_METADATA")
-        print(datastream)
+        #print(datastream)
         self.assertTrue("<fimd:file-item-md" in datastream)
 
     def test_datastream_easy_administrative_metadata_no_content(self):
         datastream = self.fedora.datastream(test_dataset, "AMD")
         print(datastream)
-        #self.assertTrue("<fimd:file-item-md" in datastream)
+        self.assertTrue("<damd:administrative-md" in datastream)
 
     # auth required
     def test_datastream_easy_file(self):
         datastream = self.fedora.datastream(test_file, "EASY_FILE", content_format="xml")
-        print(datastream)
+        #print(datastream)
         self.assertTrue(datastream.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     def test_datastream_easy_file_no_content(self):
@@ -144,7 +147,7 @@ class TestFedora(unittest.TestCase):
     def test_find_objects(self):
         query = "cDate>=2015-01-01 pid~easy-dataset:* state=A"
         result = self.fedora.find_objects(query)
-        print(result)
+        #print(result)
 
     # auth required because of post. can query unauthorized with get.
     def test_risearch(self):
@@ -188,7 +191,43 @@ class TestFedora(unittest.TestCase):
     def test_list_datastreams(self):
         pid = 'easy-dataset:450'
         text = self.fedora.list_datastreams(pid)
-        print(text)
+        #print(text)
 
+    @unittest.skip('Ignore put methods')
+    def test_modify_datastream(self):
+        # get the existing datastream 'AMD'
+        ET.register_namespace('damd', 'http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/')
+        ET.register_namespace('wfs', 'http://easy.dans.knaw.nl/easy/workflow/')
+        xml = self.fedora.datastream(test_dataset, "AMD")
+        root = ET.fromstring(xml)
+        eldp = root.find('depositorId')
+        existing_depositor_id = eldp.text
+        new_depositor_id = existing_depositor_id[::-1]
+        print('changing', existing_depositor_id, 'to', new_depositor_id)
 
+        eldp.text = new_depositor_id
+        doc = ET.ElementTree(element=root)
+
+        folder = os.path.join(os.path.expanduser("~"), "tmp", "fedora_modify")
+        os.makedirs(folder, exist_ok=True)
+        local_path = os.path.join(folder, 'damd.xml')
+        doc.write(local_path, encoding='UTF-8', xml_declaration=True)
+
+        response = self.fedora.modify_datastream(test_dataset, 'AMD',
+                                                 ds_label='Administrative metadata for this dataset',
+                                                 filepath=local_path,
+                                                 mediatype='application/xml',
+                                                 formatURI='http://easy.dans.knaw.nl/easy/dataset-administrative-metadata/',
+                                                 logMessage='testing modify datastream')
+        print(response)
+        self.assertEqual(200, response.status_code)
+
+        xml = self.fedora.datastream(test_dataset, "AMD")
+        root = ET.fromstring(xml)
+        eldp = root.find('depositorId')
+        self.assertEqual(new_depositor_id, eldp.text)
+
+        dsp = DatastreamProfile(test_dataset, 'AMD', self.fedora)
+        dsp.from_xml(response.text)
+        print(dsp.props)
 

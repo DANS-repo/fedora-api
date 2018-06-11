@@ -60,6 +60,9 @@ class DatastreamProfile(object):
 
     def fetch(self):
         xml = self.fedora.datastream(self.object_id, self.ds_id, content_format="xml")
+        self.from_xml(xml)
+
+    def from_xml(self, xml):
         root = ET.fromstring(xml)
         self.ds_label = __text__(root.find("dsp:dsLabel", ns))
         self.ds_version_id = __text__(root.find("dsp:dsVersionID", ns))

@@ -78,10 +78,20 @@ class Fedora(object):
             LOG.info("Connected to %s\n" % self.url)
             print('Connected to %s, logged in as %s\n' % (self.url, username))
 
+    # @staticmethod
+    # def reset():
+    #     Fedora._instance = None
+    #     LOG.info("Fedora instance was reset")
+
     @staticmethod
-    def reset():
-        Fedora._instance = None
-        LOG.info("Fedora instance was reset")
+    def from_file(cfg_file=None):
+        if cfg_file is None:
+            cfg_file = os.path.join(os.path.expanduser("~"), CFG_FILE)
+        LOG.info("Creating a new Fedora instance from file %s" % cfg_file)
+        with open(cfg_file) as cfg:
+            line = cfg.readline().strip()
+        host, port, username, password = line.split(",")
+        return Fedora(host, port, username, password)
 
     def as_text(self, url):
         response = self.session.get(url)
@@ -127,7 +137,25 @@ class Fedora(object):
             response = self.session.post(url, params=payload, files=files)
             if response.status_code != 201:
                 raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
-            return response
+        return response
+
+    def modify_datastream(self, pid, ds_id, ds_label, filepath, mediatype, formatURI, logMessage):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-modifyDatastream
+
+        /objects/{pid}/datastreams/{dsID} ? [dsLocation] [altIDs] [dsLabel] [versionable] [dsState] [formatURI] [checksumType] [checksum] [mimeType] [logMessage] [ignoreContent] [lastModifiedDate]
+
+        :return: datastream profile
+        """
+        url = self.url + '/objects/' + pid + '/datastreams/' + ds_id
+        payload = {'dsLabel': ds_label, 'checksumType': 'DISABLED',
+                   'mimeType': mediatype, 'formatURI': formatURI, 'logMessage': logMessage}
+        filename = os.path.basename(filepath)
+        with open(filepath, 'rb') as file:
+            response = self.session.put(url, params=payload, data=file)
+            if response.status_code != 200:
+                raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response
 
     def list_datastreams(self, pid):
         """
