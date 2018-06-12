@@ -31,8 +31,8 @@ class Worker(object):
             quoting = csv.QUOTE_MINIMAL
 
     """
-    def __init__(self, dialect=utils.RFC4180):
-        self.fedora = Fedora()
+    def __init__(self, fedora, dialect=utils.RFC4180):
+        self.fedora = fedora
         self.dialect = dialect
 
     def download_batch(self, id_list,
