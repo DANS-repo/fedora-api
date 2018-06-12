@@ -39,7 +39,8 @@ class Worker(object):
                        dump_dir="worker-downloads",
                        log_file="worker-log.csv",
                        id_in_path=True,
-                       chunk_size=1024):
+                       chunk_size=1024,
+                       reporting=True):
         """
         Download a bunch of files, store metadata in a work-log, compare checksums.
 
@@ -55,6 +56,7 @@ class Worker(object):
         checksum_error_count = 0
         work_log = os.path.abspath(log_file)
         os.makedirs(os.path.dirname(work_log), exist_ok=True)
+        count = 0
         with open(work_log, 'w', newline='', ) as csv_log:
             csv_writer = csv.writer(csv_log, dialect=self.dialect)
             csv_writer.writerow(["file_id", "dataset_id", "server_date", "filename", "path", "local_path",
@@ -68,15 +70,15 @@ class Worker(object):
                     = checksum = creation_date = creator_role = visible_to = accessible_to = checksum_error = "ERROR"
                 try:
                     meta = self.fedora.download(object_id, ds_id, dump_dir, id_in_path, chunk_size)
-                    profile = DatastreamProfile(object_id, ds_id)
+                    profile = DatastreamProfile(object_id, ds_id, self.fedora)
                     profile.fetch()
-                    fmd = FileItemMetadata(object_id)
+                    fmd = FileItemMetadata(object_id, self.fedora)
                     fmd.fetch()
 
                     dataset_id = fmd.fmd_dataset_sid
                     # as of late the dataset id is not in FileItemMetadata anymore
                     if dataset_id is None or dataset_id == '':
-                        rex = RelsExt(object_id)
+                        rex = RelsExt(object_id, self.fedora)
                         rex.fetch()
                         dataset_id = rex.get_is_subordinate_to()
                     server_date = utils.as_w3c_datetime(meta["Date"])
@@ -107,6 +109,9 @@ class Worker(object):
                                      checksum_type, checksum, creation_date,
                                      creator_role, visible_to, accessible_to,
                                      checksum_error])
+                count += 1
+                if reporting:
+                    print('\r', count, dataset_id, object_id, filename, end='', flush=True)
         return checksum_error_count
 
     @staticmethod
