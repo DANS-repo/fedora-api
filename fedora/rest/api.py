@@ -17,21 +17,10 @@ class FedoraException(RuntimeError):
 
 class Fedora(object):
     """
-    Fedora is a singleton class that expects a configuration file at::
 
-        {user_home}/src/fedora.cfg
-
-    The first line of the file should contain::
-
-        host,port,username,password
-
-    The first time the Fedora class is instantiated or after a :func:`reset` the instance can be configured
-    with a custom path to the configuration file::
-
-        fedora = Fedora(cfg_file="path/to/my_fedora.cfg")
 
     """
-    _instance = None
+    # _instance = None
 
     # def __new__(cls, *args, cfg_file=None, **kwargs):
     #     if not cls._instance:
@@ -76,7 +65,7 @@ class Fedora(object):
             raise FedoraException("Could not connect to %s" % self.url)
         else:
             LOG.info("Connected to %s\n" % self.url)
-            print('Connected to %s, logged in as %s\n' % (self.url, username))
+            print('Version: 1.0.3 Connected to %s, logged in as %s\n' % (self.url, username))
 
     # @staticmethod
     # def reset():
