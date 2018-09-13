@@ -8,7 +8,7 @@ import logging
 
 from fedora import utils
 from fedora.rest.api import Fedora, FedoraException
-from fedora.rest.ds import DatastreamProfile, FileItemMetadata
+from fedora.rest.ds import DatastreamProfile, FileItemMetadata, RelsExt
 
 LOG = logging.getLogger(__name__)
 
@@ -31,22 +31,23 @@ class Worker(object):
             quoting = csv.QUOTE_MINIMAL
 
     """
-    def __init__(self, dialect=utils.RFC4180):
-        self.fedora = Fedora()
+    def __init__(self, fedora, dialect=utils.RFC4180):
+        self.fedora = fedora
         self.dialect = dialect
 
     def download_batch(self, id_list,
                        dump_dir="worker-downloads",
                        log_file="worker-log.csv",
                        id_in_path=True,
-                       chunk_size=1024):
+                       chunk_size=1024,
+                       reporting=True):
         """
         Download a bunch of files, store metadata in a work-log, compare checksums.
 
         :param id_list: either a list of file-id's or the name of the file that contains this list
         :param dump_dir: where to store downloaded files
         :param log_file: where to write the work-log
-        :param dialect: what csv dialect should the work-log be written in, default: :class:`csv.excel`
+        :param dialect: what csv dialect should the work-log be written in, default: :class:`utils.RFC4180`
         :param id_in_path: should (the number part of) the object_id be part of the local path, default: `True`
         :param chunk_size: size of chuncks for read-write operation, default: 1024
         :return: count of checksum errors
@@ -55,6 +56,7 @@ class Worker(object):
         checksum_error_count = 0
         work_log = os.path.abspath(log_file)
         os.makedirs(os.path.dirname(work_log), exist_ok=True)
+        count = 0
         with open(work_log, 'w', newline='', ) as csv_log:
             csv_writer = csv.writer(csv_log, dialect=self.dialect)
             csv_writer.writerow(["file_id", "dataset_id", "server_date", "filename", "path", "local_path",
@@ -68,12 +70,17 @@ class Worker(object):
                     = checksum = creation_date = creator_role = visible_to = accessible_to = checksum_error = "ERROR"
                 try:
                     meta = self.fedora.download(object_id, ds_id, dump_dir, id_in_path, chunk_size)
-                    profile = DatastreamProfile(object_id, ds_id)
+                    profile = DatastreamProfile(object_id, ds_id, self.fedora)
                     profile.fetch()
-                    fmd = FileItemMetadata(object_id)
+                    fmd = FileItemMetadata(object_id, self.fedora)
                     fmd.fetch()
 
                     dataset_id = fmd.fmd_dataset_sid
+                    # as of late the dataset id is not in FileItemMetadata anymore
+                    if dataset_id is None or dataset_id == '':
+                        rex = RelsExt(object_id, self.fedora)
+                        rex.fetch()
+                        dataset_id = rex.get_is_subordinate_to()
                     server_date = utils.as_w3c_datetime(meta["Date"])
                     filename = meta["filename"]
                     file_path = fmd.fmd_path
@@ -102,6 +109,9 @@ class Worker(object):
                                      checksum_type, checksum, creation_date,
                                      creator_role, visible_to, accessible_to,
                                      checksum_error])
+                count += 1
+                if reporting:
+                    print('\r', count, dataset_id, object_id, filename, end='', flush=True)
         return checksum_error_count
 
     @staticmethod

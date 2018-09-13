@@ -33,40 +33,65 @@ class Fedora(object):
     """
     _instance = None
 
-    def __new__(cls, *args, cfg_file=None, **kwargs):
-        if not cls._instance:
-            LOG.info("Creating a new Fedora instance")
-            cls._instance = super(Fedora, cls).__new__(cls)
-            if cfg_file is None:
-                cfg_file = os.path.join(os.path.expanduser("~"), CFG_FILE)
-            if not os.path.exists(cfg_file):
-                raise FedoraException("No configuration file found at %s" % cfg_file)
-            with open(cfg_file) as cfg:
-                line = cfg.readline()
-            lspl = line.split(",")
-            if len(lspl) < 4:
-                raise FedoraException("Invalid configuration file at %s,"
-                                      "\n\tfirst line of file should contain 'host,port,username,password'." % cfg_file)
-            host, port, username, password = lspl
-            if not host.startswith("http"):
-                host = "http://" + host
-            cls.url = host + ":" + str(port) + "/fedora"
-            cls.session = requests.Session()
-            cls.session.headers = {'User-Agent': 'Mozilla/5.0'}
-            cls.session.auth = (username, password)
-            LOG.info("Created session for %s" % cls.url)
-            response = cls.session.get(cls.url)
-            if response.status_code != requests.codes.ok:
-                cls._instance = None
-                raise FedoraException("Could not connect to %s" % cls.url)
-            else:
-                LOG.info("Connected to %s\n" % cls.url)
-        return cls._instance
+    # def __new__(cls, *args, cfg_file=None, **kwargs):
+    #     if not cls._instance:
+    #         LOG.info("Creating a new Fedora instance")
+    #         cls._instance = super(Fedora, cls).__new__(cls)
+    #         if cfg_file is None:
+    #             cfg_file = os.path.join(os.path.expanduser("~"), CFG_FILE)
+    #         if not os.path.exists(cfg_file):
+    #             raise FedoraException("No configuration file found at %s" % cfg_file)
+    #         with open(cfg_file) as cfg:
+    #             line = cfg.readline()
+    #         lspl = line.split(",")
+    #         if len(lspl) < 4:
+    #             raise FedoraException("Invalid configuration file at %s,"
+    #                                   "\n\tfirst line of file should contain 'host,port,username,password'." % cfg_file)
+    #         host, port, username, password = lspl
+    #         if not host.startswith("http"):
+    #             host = "http://" + host
+    #         cls.url = host + ":" + str(port) + "/fedora"
+    #         cls.session = requests.Session()
+    #         cls.session.headers = {'User-Agent': 'Mozilla/5.0'}
+    #         cls.session.auth = (username, password.strip())
+    #         LOG.info("Created session for %s" % cls.url)
+    #         response = cls.session.get(cls.url)
+    #         if response.status_code != requests.codes.ok:
+    #             cls._instance = None
+    #             raise FedoraException("Could not connect to %s" % cls.url)
+    #         else:
+    #             LOG.info("Connected to %s\n" % cls.url)
+    #             print('Connected to %s, logged in as %s\n' % (cls.url, username))
+    #     return cls._instance
+
+    def __init__(self, host, port, username, password):
+        if not host.startswith("http"):
+            host = "http://" + host
+        self.url = host + ":" + str(port) + "/fedora"
+        self.session = requests.Session()
+        self.session.headers = {'User-Agent': 'Mozilla/5.0'}
+        self.session.auth = (username, password)
+        response = self.session.get(self.url)
+        if response.status_code != requests.codes.ok:
+            raise FedoraException("Could not connect to %s" % self.url)
+        else:
+            LOG.info("Connected to %s\n" % self.url)
+            print('Connected to %s, logged in as %s\n' % (self.url, username))
+
+    # @staticmethod
+    # def reset():
+    #     Fedora._instance = None
+    #     LOG.info("Fedora instance was reset")
 
     @staticmethod
-    def reset():
-        Fedora._instance = None
-        LOG.info("Fedora instance was reset")
+    def from_file(cfg_file=None):
+        if cfg_file is None:
+            cfg_file = os.path.join(os.path.expanduser("~"), CFG_FILE)
+        LOG.info("Creating a new Fedora instance from file %s" % cfg_file)
+        with open(cfg_file) as cfg:
+            line = cfg.readline().strip()
+        host, port, username, password = line.split(",")
+        return Fedora(host, port, username, password)
 
     def as_text(self, url):
         response = self.session.get(url)
@@ -97,6 +122,52 @@ class Fedora(object):
             postfix = "?format=" + content_format
         url = self.url + "/objects/" + object_id + "/datastreams/" + ds_id + postfix
         return self.as_text(url)
+
+    def add_managed_datastream(self, pid, ds_id, ds_label, filepath, mediatype, sha1):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-addDatastream
+
+        /objects/{pid}/datastreams/{dsID} ? [controlGroup] [dsLocation] [altIDs] [dsLabel] [versionable] [dsState] [formatURI] [checksumType] [checksum] [mimeType] [logMessage]
+
+        """
+        url = self.url + '/objects/' + pid + '/datastreams/' + ds_id
+        payload = {'controlGroup': 'M', 'dsLabel': ds_label, 'checksumType': 'SHA-1', 'checksum': sha1, 'mimeType': mediatype}
+        filename = os.path.basename(filepath)
+        with open(filepath, 'rb') as file:
+            files = {'file': (filename, file, mediatype, {'Expires': '0'})}
+            response = self.session.post(url, params=payload, files=files)
+            if response.status_code != 201:
+                raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response
+
+    def modify_datastream(self, pid, ds_id, ds_label, filepath, mediatype, formatURI, logMessage):
+        """
+        See: https://wiki.duraspace.org/display/FEDORA36/REST+API#RESTAPI-modifyDatastream
+
+        /objects/{pid}/datastreams/{dsID} ? [dsLocation] [altIDs] [dsLabel] [versionable] [dsState] [formatURI] [checksumType] [checksum] [mimeType] [logMessage] [ignoreContent] [lastModifiedDate]
+
+        :return: datastream profile
+        """
+        url = self.url + '/objects/' + pid + '/datastreams/' + ds_id
+        payload = {'dsLabel': ds_label, 'checksumType': 'SHA-1', # fedora computes another checksum 'checksum': sha1,
+                   'mimeType': mediatype, 'formatURI': formatURI, 'logMessage': logMessage}
+        filename = os.path.basename(filepath)
+        with open(filepath, 'rb') as file:
+            response = self.session.put(url, params=payload, data=file)
+            if response.status_code != 200:
+                raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response
+
+    def list_datastreams(self, pid):
+        """
+        /objects/{pid}/datastreams ? [format] [asOfDateTime]
+        """
+        url = self.url + '/objects/' + pid + '/datastreams'
+        payload = {'format': 'xml'}
+        response = self.session.get(url, params=payload)
+        if response.status_code != 200:
+            raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
+        return response.text
 
     def add_relationship(self, subj_id, predicate, obj, is_literal=False, data_type=None):
         """
@@ -167,7 +238,7 @@ class Fedora(object):
     @staticmethod
     def compute_filename(response):
         filename = "unknown"
-        # # Fedora response header has filenames with double extensions like "filename.pdf.pdf"
+        # # Fedora response header has filenames with double extensions like "filename.pdf.pdf", "db.mdb.bin"
         # # therefore this code is problematic
         cd = response.headers['content-disposition']
         fn = re.findall("filename=(.+)", cd)
@@ -180,7 +251,7 @@ class Fedora(object):
         # # correct double extension
         exts = filename.split(".")
         leng = len(exts)
-        if leng > 2 and exts[leng - 1] == exts[leng - 2]:
+        if leng > 2:
             filename = ".".join(exts[:-1])
         return filename
 
