@@ -71,7 +71,8 @@ class Fedora(object):
     def as_text(self, url):
         response = self.session.get(url)
         if response.status_code == requests.codes.ok:
-            return response.text
+            text = str(response.content, 'utf-8', errors='replace')
+            return text
         else:
             raise FedoraException("Error response from Fedora: %d %s" % (response.status_code, response.reason))
 
