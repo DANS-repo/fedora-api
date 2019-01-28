@@ -6,18 +6,17 @@ import unittest
 import logging
 
 import sys
-import time
 import xml.etree.ElementTree as ET
+import fedora.rest.api as fra
 
 from fedora.utils import sha1_for_file
 
-from fedora.rest.api import Fedora
 from fedora.rest.ds import DatastreamProfile
 
 test_file = "easy-file:219890"
 test_dataset = "easy-dataset:5958"
 
-#@unittest.skip("on-line test")
+@unittest.skip("on-line test")
 class TestFedora(unittest.TestCase):
 
     @classmethod
@@ -32,22 +31,23 @@ class TestFedora(unittest.TestCase):
         root.addHandler(ch)
 
         cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
-        cls.fedora = Fedora.from_file(cfg_file=cfg_file)
+        #cls.fedora = fra.instance(cfg_file)
+        cls.fedora = fra.Fedora.from_file(cfg_file)
 
-    @unittest.skip
-    def test_reset(self):
-        old = str(self.fedora)
-        #Fedora.reset()
-        cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
-        self.fedora = Fedora.from_file(cfg_file=cfg_file)
-        new = str(self.fedora)
-        self.assertNotEqual(old, new)
-        self.assertEqual(self.fedora, Fedora())
+    # @unittest.skip
+    # def test_reset(self):
+    #     old = str(self.fedora)
+    #     #Fedora.reset()
+    #     cfg_file = os.path.join(os.path.expanduser("~"), "src", "teasy.cfg")
+    #     self.fedora = Fedora.from_file(cfg_file=cfg_file)
+    #     new = str(self.fedora)
+    #     self.assertNotEqual(old, new)
+    #     self.assertEqual(self.fedora, Fedora())
 
     # auth required
     def test_object_xml(self):
         objectxml = self.fedora.object_xml(test_file)
-        #print(objectxml)
+        print(objectxml)
         self.assertTrue(objectxml.startswith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
 
     def test_datastream_rels_ext(self):

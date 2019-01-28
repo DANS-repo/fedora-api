@@ -9,4 +9,5 @@
 
 requests
 python-dateutil
+rdflib
 -e .

@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 import xml.etree.ElementTree as ET
 
-import rdflib as rdflib
-from rdflib import URIRef
+import rdflib
 
 from fedora.rest.api import Fedora, FedoraException
 
@@ -166,7 +165,7 @@ class RelsExt(object):
         self.fedora = fedora
         self.object_id = object_id
         self.graph = rdflib.Graph()
-        self.subject = URIRef('info:fedora/' + self.object_id)
+        self.subject = rdflib.URIRef('info:fedora/' + self.object_id)
 
     def fetch(self):
         self.graph.parse(data=self.fedora.datastream(self.object_id, "RELS-EXT"))
@@ -176,7 +175,7 @@ class RelsExt(object):
 
     def get_is_subordinate_to(self):
         return \
-        str(self.graph.value(self.subject, URIRef('http://dans.knaw.nl/ontologies/relations#isSubordinateTo'))).split(
+        str(self.graph.value(self.subject, rdflib.URIRef('http://dans.knaw.nl/ontologies/relations#isSubordinateTo'))).split(
             '/')[1]
 
 
