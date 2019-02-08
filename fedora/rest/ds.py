@@ -148,6 +148,7 @@ class EasyMetadata(object):
         self.object_id = object_id
 
         self.doi = None
+        self.urn = None
 
     def fetch(self):
         xml = self.fedora.datastream(self.object_id, "EMD")
@@ -158,6 +159,10 @@ class EasyMetadata(object):
                 if '{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme' in child.attrib \
                         and child.attrib['{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme'] == 'DOI':
                     self.doi = child.text
+                if '{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme' in child.attrib \
+                        and child.attrib['{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme'] == 'PID':
+                    self.urn = child.text
+
 
 class RelsExt(object):
 
