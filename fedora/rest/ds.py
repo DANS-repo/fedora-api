@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import xml.etree.ElementTree as ET
-
+import pandas as pd
 import rdflib
 
 from fedora.rest.api import Fedora, FedoraException
@@ -162,6 +162,16 @@ class EasyMetadata(object):
                 if '{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme' in child.attrib \
                         and child.attrib['{http://easy.dans.knaw.nl/easy/easymetadata/eas/}scheme'] == 'PID':
                     self.urn = child.text
+
+
+def dataset_identifiers(dataset_ids, fedora):
+    df = pd.DataFrame(columns=['dataset_id', 'doi', 'urn'])
+    for easy_id in dataset_ids:
+        emd = EasyMetadata(easy_id, fedora)
+        emd.fetch()
+        fields = {'dataset_id': easy_id, 'doi': emd.doi, 'urn': emd.urn}
+        df = df.append(fields, ignore_index=True)
+    return df
 
 
 class RelsExt(object):
